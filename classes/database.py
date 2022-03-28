@@ -4,7 +4,7 @@ class Database(object):
         self._path = f'C:\Users\{self._username}\AppData\Local\Google\Chrome\User Data\Default\History'
         self._last_updated: int = None
 
-        '''setting up sqlite connection is done here'''
+        '''setting up sqlite connection to be done here'''
 
     def update(self) -> None:
         '''To be overriden by children'''
