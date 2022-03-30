@@ -11,7 +11,7 @@ class Database(object):
 
         '''setting up sqlite connection to be done here'''
         c = sqlite3.connect(self._path, timeout=10)
-        cursor = c.cursor()
+        self._cursor = c.cursor()
 
     def update(self) -> None:
         '''To be overriden by children'''
@@ -50,12 +50,23 @@ class Urls(Database):
 
     def update(self) -> None:
         '''run an sqlite query to store urls visited in urls list'''
-        pass
+        self._urls.clear()
+        query = "SELECT DISTINCT url FROM urls;"
+        self._cursor.execute(query)
+        for i in self._cursor.fetchall():
+            if i[0].startswith('http'):
+                self._urls.append(i[0])
 
     def get_domain(self, url: str) -> str:
         '''string slicing to get only the domain from url\n
            e.g. https://docs.python.org/3/library/time.html to https://docs.python.org/'''
-        pass
+        occurance = 0
+        for pos, char in enumerate(url):
+            if(char == '/'):
+                occurance += 1
+            if occurance == 3:
+                break
+            return url[:pos + 1]    
 
     def get_website_count(self) -> int:
         '''get total number of unique domains visited in a day'''
