@@ -1,3 +1,8 @@
+import sqlite3
+import time
+from os.path import exists
+
+
 class Database(object):
     def __init__(self, username: str) -> None:
         self._username = username
@@ -5,6 +10,8 @@ class Database(object):
         self._last_updated: int = None
 
         '''setting up sqlite connection to be done here'''
+        c = sqlite3.connect(self._path, timeout=10)
+        cursor = c.cursor()
 
     def update(self) -> None:
         '''To be overriden by children'''
@@ -12,11 +19,11 @@ class Database(object):
 
     def chrome(self) -> bool:
         '''To check if Chrome is installed on the system'''
-        pass
+        return exists("C:\Program Files\Google\Chrome\Application\chrome.exe")
 
     def is_present(self) -> bool:
         '''To check if History is present in the system'''
-        pass
+        return exists(self._path)
 
     def get_path(self) -> str:
         return self._path
@@ -30,9 +37,9 @@ class Database(object):
     def set_last_updated(self) -> None:
         '''Assign current time in seconds since the epoch to last_updated\n
            Hint : Use gmtime() from datetime module'''
-        pass
+        self._last_updated = time.gmtime()
 
-    
+        
 class Urls(Database):
     def __init__(self, username: str) -> None:
         super.__init__(username)
