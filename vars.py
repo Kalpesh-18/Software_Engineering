@@ -66,3 +66,15 @@ PATH_ICON = 'img/file.png'
 NOChrome_TITLE = 'No Chrome Found'
 
 INVALID_EMAIL_TITLE = 'Invalid Email'
+
+b0_lbl0_STYLE = 'color: #DF5865;\
+                    font-size: 80px;\
+                    font-weight: bold;\
+                    border:0px;'
+b0_lbl1_STYLE = 'color: #86C38F;\
+                    font-size: 30px;\
+                    border:0px'
+b2_lbl_STYLE = 'color: #FFF;\
+                font-size:12px;\
+                font-weight:bold;\
+                border-top: 2px solid #86C38F'

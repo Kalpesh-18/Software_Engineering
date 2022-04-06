@@ -4,9 +4,14 @@ from PyQt5.QtWidgets import QWidget, QMainWindow, \
             QSizePolicy, QGraphicsDropShadowEffect
 from PyQt5.QtGui import QIcon, QColor, QPixmap
 from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtWebEngineWidgets import QWebEngineView
+
+from plotly.graph_objects import Figure, Scatter, Layout, Bar, Pie
+import plotly
+
 
 from vars import *
-
+from classes.appdata import *
 
 
 class Window(QMainWindow):
@@ -35,6 +40,12 @@ class Window(QMainWindow):
         self.create_update()
         self.create_vspacer()
         self.create_boxes()
+        self.create_now()
+        self.create_nod()
+        self.create_tod()
+        self.create_viw()
+        self.create_wv()
+        self.create_mvw()
 
     def create_sidebar(self):
         self.sidebar = QWidget()
@@ -70,12 +81,24 @@ class Window(QMainWindow):
         self.update_btn.setFixedHeight(80)
         self.update_btn.setIcon(QIcon(UPDATE_ICON))
         self.update_btn.setIconSize(QSize(50, 50))
+        self.update_btn.clicked.connect(self.click_update)
         shadow = QGraphicsDropShadowEffect()
         shadow.setColor(QColor('#111'))
         shadow.setOffset(2)
         shadow.setBlurRadius(10)
         self.update_btn.setGraphicsEffect(shadow)
         self.sidebar_lo.addWidget(self.update_btn)
+
+    def click_update(self):
+        for layout in self.boxes_lo:
+            for i in reversed(range(layout.count())): 
+                layout.itemAt(i).widget().deleteLater()
+        self.create_now()
+        self.create_nod()
+        self.create_tod()
+        self.create_viw()
+        self.create_wv()
+        self.create_mvw()
 
     def create_vspacer(self):
         self.vspacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
@@ -92,14 +115,19 @@ class Window(QMainWindow):
     def create_boxes(self):
 
         self.boxes = [QWidget() for i in range(6)]
+        self.boxes_lo = [QVBoxLayout(), QVBoxLayout(), QGridLayout(), QVBoxLayout(), QVBoxLayout(), QVBoxLayout()]
 
-        for box in self.boxes:
+        for i, box in enumerate(self.boxes):
             box.setStyleSheet(BOX_STYLE)
+            box.setLayout(self.boxes_lo[i])
+            self.boxes_lo[i].setSpacing(0)
             shadow = QGraphicsDropShadowEffect()
             shadow.setColor(QColor('#111'))
             shadow.setOffset(2)
             shadow.setBlurRadius(10)
             box.setGraphicsEffect(shadow)
+            if i < 3:
+                box.setFixedHeight(180)
 
         self.container_lo.addWidget(self.boxes[0], 0, 0, 1, 1)
         self.container_lo.addWidget(self.boxes[1], 0, 1, 1, 1)
@@ -107,6 +135,115 @@ class Window(QMainWindow):
         self.container_lo.addWidget(self.boxes[3], 1, 0, 1, 4)
         self.container_lo.addWidget(self.boxes[4], 2, 0, 1, 3)
         self.container_lo.addWidget(self.boxes[5], 2, 3, 1, 1)
+
+    def create_now(self):
+        now = NoOfWebsites('Chitrang')
+        self.b0_lbl0 = QLabel(str(now.get_data()))
+        self.b0_lbl0.setStyleSheet(b0_lbl0_STYLE)
+        self.b0_lbl0.setAlignment(Qt.AlignHCenter | Qt.AlignBottom)
+        self.boxes_lo[0].addWidget(self.b0_lbl0)
+        self.b0_lbl1 = QLabel('Websites Visited')
+        self.b0_lbl1.setStyleSheet(b0_lbl1_STYLE)
+        self.b0_lbl1.setAlignment(Qt.AlignHCenter | Qt.AlignTop)
+        self.boxes_lo[0].addWidget(self.b0_lbl1)
+
+    def create_nod(self):
+        nod = NoOfDownloads('Chitrang')
+        self.b1_lbl0 = QLabel(str(nod.get_data()))
+        self.b1_lbl0.setStyleSheet(b0_lbl0_STYLE)
+        self.b1_lbl0.setAlignment(Qt.AlignHCenter | Qt.AlignBottom)
+        self.boxes_lo[1].addWidget(self.b1_lbl0)
+        self.b1_lbl1 = QLabel('Downloads')
+        self.b1_lbl1.setStyleSheet(b0_lbl1_STYLE)
+        self.b1_lbl1.setAlignment(Qt.AlignHCenter | Qt.AlignTop)
+        self.boxes_lo[1].addWidget(self.b1_lbl1)
+
+    def create_tod(self):
+        tod = TermsOfDay('Chitrang')
+        self.b2_lbls = [QLabel(tod.get_data()[i]) for i in range(len(tod.get_data()))]
+        for i in range(len(tod.get_data())):
+            self.b2_lbls[i].setStyleSheet(b2_lbl_STYLE)
+            self.boxes_lo[2].addWidget(self.b2_lbls[i], i % 5, i // 5, 1, 1)
+
+    def create_viw(self):
+        viw = VisitsInWeek('Chitrang')
+        x = ['day1', 'day2', 'day3', 'day4', 'day5', 'day6', 'Today']
+        y = viw.get_data()
+        # y = [2, 6, 1, 7, 3, 9, 8]
+        fig = Figure(data=Scatter(x=x, y=y, line=dict(color='#DF5865')), layout = Layout(
+                margin=dict(l=10, r=10, t=10, b=10),
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)'
+            ))
+        fig.update_layout(
+            xaxis = dict(
+                tickfont = dict(size=10, color='#888')
+                )
+            )
+        fig.update_xaxes(showline=True, linewidth=1, linecolor='#534f82', gridcolor='#353354')
+        fig.update_yaxes(showline=True, linewidth=1, linecolor='#534f82', gridcolor='#353354')
+
+        html = '<html><body style="background:#24233A;">'
+        html += plotly.offline.plot(fig, output_type='div', include_plotlyjs='cdn')
+        html += '</body></html>'
+
+        plot_widget = QWebEngineView()
+        plot_widget.resize(600, 200)
+        plot_widget.setHtml(html)
+        self.boxes_lo[3].addWidget(plot_widget)
+
+    def create_wv(self):
+        wv = WebsiteVisits('Chitrang')
+        x = list(wv.get_data().keys())
+        y = list(wv.get_data().values())
+        fig = Figure(data=Bar(x=x, y=y, marker_color='#86C38F'), layout = Layout(
+                margin=dict(l=10, r=10, t=10, b=10),
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+            ))
+        fig.update_layout(
+            xaxis = dict(
+                tickfont = dict(size=10, color='#888')
+                )
+            )
+        fig.update_xaxes(showline=True, linewidth=1, linecolor='#534f82', gridcolor='#353354')
+        fig.update_yaxes(showline=True, linewidth=1, linecolor='#534f82', gridcolor='#353354')
+
+        html = '<html><body style="background:#24233A;">'
+        html += plotly.offline.plot(fig, output_type='div', include_plotlyjs='cdn')
+        html += '</body></html>'
+
+        plot_widget = QWebEngineView()
+        plot_widget.resize(200, 200)
+        plot_widget.setHtml(html)
+        self.boxes_lo[4].addWidget(plot_widget)
+
+
+    def create_mvw(self):
+        mvw = MostVisitedWebsites('Chitrang')
+        x = list(mvw.get_data().keys())[:5]
+        y = list(mvw.get_data().values())[:5]
+
+        fig = Figure(data=Pie(labels=x, values=y), layout = Layout(
+                margin=dict(l=10, r=10, t=10, b=10),
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)'
+            ))
+        fig.update_layout(
+            legend = dict(font = dict(size = 10))
+            )
+        fig.update_xaxes(showline=True, linewidth=1, linecolor='#534f82', gridcolor='#353354')
+        fig.update_yaxes(showline=True, linewidth=1, linecolor='#534f82', gridcolor='#353354')
+        # we create html code of the figure
+        html = '<html><body style="background:#24233A;">'
+        html += plotly.offline.plot(fig, output_type='div', include_plotlyjs='cdn')
+        html += '</body></html>'
+
+        # we create an instance of QWebEngineView and set the html code
+        plot_widget = QWebEngineView()
+        plot_widget.resize(600, 200)
+        plot_widget.setHtml(html)
+        self.boxes_lo[5].addWidget(plot_widget)
 
 
 class SignUp(QMainWindow):
