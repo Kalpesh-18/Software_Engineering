@@ -1,4 +1,4 @@
-from database import Downloads, Terms, Urls, Visits
+from classes.database import Downloads, Terms, Urls, Visits
 import pandas as pd
 import os
 import datetime
@@ -29,7 +29,7 @@ class NoOfWebsites(AppData, Urls):
         '''save the data into a file'''
         pass
 
-    def get_data(self) -> None:
+    def get_data(self) -> int:
         '''call Urls.get_website_count() and store in no_of_websites'''
         self.update()
         self._no_of_websites = self.get_website_count()
@@ -53,7 +53,7 @@ class MostVisitedWebsites(AppData, Visits):
         '''save the data into a file and save as a pie chart'''
         pass
 
-    def get_data(self) -> None:
+    def get_data(self) -> dict():
         '''call Visits.get_visits() and store top 5 in most_visited_websites\n
            create a pie chart\n
            update visits in week file(where number of visits in last 7 days is stored)'''
@@ -71,7 +71,7 @@ class VisitsInWeek(AppData):
         '''save the data into a file and save as a line plot'''
         pass
 
-    def get_data(self) -> None:
+    def get_data(self) -> list():
         '''access visits in week file(where number of visits in last 7 days is stored) and store its data in visits_in_week\n
            create a line plot'''
         df = pd.read_csv('viw.csv')
@@ -88,7 +88,7 @@ class WebsiteVisits(AppData, Visits):
         '''save the data into a file and save as a bar plot'''
         pass
 
-    def get_data(self) -> None:
+    def get_data(self) -> dict():
         '''call Visits.get_visits() and store it in website_visits\n
            create a bar plot'''
         self.update()
@@ -106,7 +106,7 @@ class NoOfDownloads(AppData, Downloads):
         '''save the data into a file'''
         pass
 
-    def get_data(self) -> None:
+    def get_data(self) -> int:
         '''call Downloads.get_downloads() and store it in no_of_downloads'''
         self.update()
         self._no_of_downloads = len(self.get_downloads())
@@ -123,11 +123,11 @@ class TermsOfDay(AppData, Terms):
         '''save the data into a file'''
         pass
 
-    def get_data(self) -> None:
+    def get_data(self) -> list():
         '''call Terms.get_terms(), perform some stemming and store it in terms_of_day(max 10)'''
         self.update()
         self._terms_of_day = self.get_terms()
-        return self._terms_of_day[:10]
+        return (self._terms_of_day[:10] if len(self._terms_of_day) > 10 else self._terms_of_day)
 
 
 if __name__ == '__main__':

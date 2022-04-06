@@ -123,7 +123,7 @@ class Visits(Database):
 class Downloads(Database):
     def __init__(self, username: str) -> None:
         self.db = Database(username)
-        self._downloads: list[str] = None
+        self._downloads = list[str]
 
     def get_downloads(self) -> list[str]:
         return self._downloads
@@ -133,8 +133,9 @@ class Downloads(Database):
         query = f"SELECT current_path \
                     FROM downloads \
                     WHERE datetime(end_time / 1000000 + (strftime('%s', '1601-01-01')), 'unixepoch') \
-                    LIKE '{self.get_date()}%'"
+                    LIKE '{self.db.get_date()}%'"
         self.db.get_cursor().execute(query)
+        self._downloads = [str]
         for i in self.db.get_cursor().fetchall():
             self._downloads.append(i[0])
 
