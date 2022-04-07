@@ -34,12 +34,15 @@ class NoOfWebsites(AppData, Urls):
         self.update()
         self._no_of_websites = self.get_website_count()
         with open('lu.txt', 'r') as lu:
+            df = pd.read_csv('viw.csv')
+            viw = {'viw':df['viw'].tolist()}
             if lu.readline() != datetime.datetime.now().strftime("%Y-%m-%d"):
-                df = pd.read_csv('viw.csv')
-                viw = {'viw':df['viw'].tolist()}
                 viw['viw'] = viw['viw'][1:]
-                viw['viw'].append(self._no_of_websites)
-                pd.DataFrame(viw).to_csv('viw.csv')
+                viw['viw'].append(0)
+                with open('lu.txt', 'w') as lu:
+                    lu.write(datetime.datetime.now().strftime("%Y-%m-%d"))
+            viw['viw'][-1] = self._no_of_websites
+            pd.DataFrame(viw).to_csv('viw.csv')
         return self._no_of_websites
 
 

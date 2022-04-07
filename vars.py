@@ -1,4 +1,4 @@
-WINDOW_TITLE = 'Google Chrome Statistics App'
+WINDOW_TITLE = 'StatGo'
 WINDOW_ICON = 'img/icon.png'
 WINDOW_STYLE = 'background: #202032;color:#fff;'
 
@@ -40,6 +40,8 @@ LONG_BTN_STYLE = '*{\
 
 
 SIGNIN_TITLE = 'Sign In'
+FORGOT_STYLE = 'font-size: 10px;\
+                border: none;'
 
 NODB_TITLE = 'No Database Found'
 

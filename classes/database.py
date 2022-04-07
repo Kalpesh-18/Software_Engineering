@@ -47,8 +47,6 @@ class Database(object):
         '''Assign current time in seconds since the epoch to last_updated\n
            Hint : Use gmtime() from datetime module'''
         self._last_updated = time.gmtime()
-        with open('lu.txt', 'w') as lu:
-            lu.write(self.date)
         
 
         

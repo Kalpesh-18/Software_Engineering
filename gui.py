@@ -1,18 +1,28 @@
 from PyQt5.QtWidgets import QWidget, QMainWindow, \
     QGridLayout, QVBoxLayout, QHBoxLayout, \
-        QLabel, QPushButton, QSpacerItem, QTextEdit, QGroupBox, \
+        QLabel, QPushButton, QSpacerItem, QTextEdit, QGroupBox, QLineEdit, QFileDialog, \
             QSizePolicy, QGraphicsDropShadowEffect
 from PyQt5.QtGui import QIcon, QColor, QPixmap
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtWebEngineWidgets import QWebEngineView
+from PyQt5.QtTest import QTest
 
 from plotly.graph_objects import Figure, Scatter, Layout, Bar, Pie
 import plotly
 
+from os.path import exists
+from classes.database import Database
+
+import smtplib, ssl
+
+from validate_email_address import validate_email
+
 
 from vars import *
 from classes.appdata import *
-
+from classes.user import *
+ 
+global img1, img2, img3, win2
 
 class Window(QMainWindow):
     def __init__(self) -> None:
@@ -68,12 +78,19 @@ class Window(QMainWindow):
         self.download_btn.setFixedHeight(80)
         self.download_btn.setIcon(QIcon(DOWNLOAD_ICON))
         self.download_btn.setIconSize(QSize(50, 50))
+        self.download_btn.clicked.connect(self.click_download)
         shadow = QGraphicsDropShadowEffect()
         shadow.setColor(QColor('#111'))
         shadow.setOffset(2)
         shadow.setBlurRadius(10)
         self.download_btn.setGraphicsEffect(shadow)
         self.sidebar_lo.addWidget(self.download_btn)
+
+    def click_download(self):
+        folder = QFileDialog.getExistingDirectory(self)
+        img1.write_image(f'{folder}/visits_in_week.png')
+        img2.write_image(f'{folder}/website_visits.png')
+        img3.write_image(f'{folder}/most_visited_websites.png')
 
     def create_update(self):
         self.update_btn = QPushButton()
@@ -137,7 +154,10 @@ class Window(QMainWindow):
         self.container_lo.addWidget(self.boxes[5], 2, 3, 1, 1)
 
     def create_now(self):
-        now = NoOfWebsites('Chitrang')
+        username = ''
+        with open('user.txt') as user:
+            username = user.readline().strip()
+        now = NoOfWebsites(username)
         self.b0_lbl0 = QLabel(str(now.get_data()))
         self.b0_lbl0.setStyleSheet(b0_lbl0_STYLE)
         self.b0_lbl0.setAlignment(Qt.AlignHCenter | Qt.AlignBottom)
@@ -148,7 +168,10 @@ class Window(QMainWindow):
         self.boxes_lo[0].addWidget(self.b0_lbl1)
 
     def create_nod(self):
-        nod = NoOfDownloads('Chitrang')
+        username = ''
+        with open('user.txt') as user:
+            username = user.readline().strip()
+        nod = NoOfDownloads(username)
         self.b1_lbl0 = QLabel(str(nod.get_data()))
         self.b1_lbl0.setStyleSheet(b0_lbl0_STYLE)
         self.b1_lbl0.setAlignment(Qt.AlignHCenter | Qt.AlignBottom)
@@ -159,17 +182,22 @@ class Window(QMainWindow):
         self.boxes_lo[1].addWidget(self.b1_lbl1)
 
     def create_tod(self):
-        tod = TermsOfDay('Chitrang')
+        username = ''
+        with open('user.txt') as user:
+            username = user.readline().strip()
+        tod = TermsOfDay(username)
         self.b2_lbls = [QLabel(tod.get_data()[i]) for i in range(len(tod.get_data()))]
         for i in range(len(tod.get_data())):
             self.b2_lbls[i].setStyleSheet(b2_lbl_STYLE)
             self.boxes_lo[2].addWidget(self.b2_lbls[i], i % 5, i // 5, 1, 1)
 
     def create_viw(self):
-        viw = VisitsInWeek('Chitrang')
+        username = ''
+        with open('user.txt') as user:
+            username = user.readline().strip()
+        viw = VisitsInWeek(username)
         x = ['day1', 'day2', 'day3', 'day4', 'day5', 'day6', 'Today']
         y = viw.get_data()
-        # y = [2, 6, 1, 7, 3, 9, 8]
         fig = Figure(data=Scatter(x=x, y=y, line=dict(color='#DF5865')), layout = Layout(
                 margin=dict(l=10, r=10, t=10, b=10),
                 paper_bgcolor='rgba(0,0,0,0)',
@@ -182,6 +210,8 @@ class Window(QMainWindow):
             )
         fig.update_xaxes(showline=True, linewidth=1, linecolor='#534f82', gridcolor='#353354')
         fig.update_yaxes(showline=True, linewidth=1, linecolor='#534f82', gridcolor='#353354')
+        global img1 
+        img1 = fig
 
         html = '<html><body style="background:#24233A;">'
         html += plotly.offline.plot(fig, output_type='div', include_plotlyjs='cdn')
@@ -193,7 +223,10 @@ class Window(QMainWindow):
         self.boxes_lo[3].addWidget(plot_widget)
 
     def create_wv(self):
-        wv = WebsiteVisits('Chitrang')
+        username = ''
+        with open('user.txt') as user:
+            username = user.readline().strip()
+        wv = WebsiteVisits(username)
         x = list(wv.get_data().keys())
         y = list(wv.get_data().values())
         fig = Figure(data=Bar(x=x, y=y, marker_color='#86C38F'), layout = Layout(
@@ -208,6 +241,8 @@ class Window(QMainWindow):
             )
         fig.update_xaxes(showline=True, linewidth=1, linecolor='#534f82', gridcolor='#353354')
         fig.update_yaxes(showline=True, linewidth=1, linecolor='#534f82', gridcolor='#353354')
+        global img2 
+        img2 = fig
 
         html = '<html><body style="background:#24233A;">'
         html += plotly.offline.plot(fig, output_type='div', include_plotlyjs='cdn')
@@ -220,7 +255,10 @@ class Window(QMainWindow):
 
 
     def create_mvw(self):
-        mvw = MostVisitedWebsites('Chitrang')
+        username = ''
+        with open('user.txt') as user:
+            username = user.readline().strip()
+        mvw = MostVisitedWebsites(username)
         x = list(mvw.get_data().keys())[:5]
         y = list(mvw.get_data().values())[:5]
 
@@ -234,12 +272,13 @@ class Window(QMainWindow):
             )
         fig.update_xaxes(showline=True, linewidth=1, linecolor='#534f82', gridcolor='#353354')
         fig.update_yaxes(showline=True, linewidth=1, linecolor='#534f82', gridcolor='#353354')
-        # we create html code of the figure
+        global img3
+        img3 = fig
+        
         html = '<html><body style="background:#24233A;">'
         html += plotly.offline.plot(fig, output_type='div', include_plotlyjs='cdn')
         html += '</body></html>'
 
-        # we create an instance of QWebEngineView and set the html code
         plot_widget = QWebEngineView()
         plot_widget.resize(600, 200)
         plot_widget.setHtml(html)
@@ -287,21 +326,27 @@ class SignUp(QMainWindow):
         self.username = QTextEdit()
         self.username.setFixedHeight(30)
         self.username.setStyleSheet(TEXTEDIT_STYLE)
+        self.username.setToolTip('Please choose the same name\nas that of your system')
         self.email_lbl = QLabel('Email')
         self.email_lbl.setStyleSheet(LABEL_STYLE)
         self.email = QTextEdit()
         self.email.setFixedHeight(30)
         self.email.setStyleSheet(TEXTEDIT_STYLE)
+        self.email.setToolTip('Please choose an email\nwhich is not linked with Chrome')
         self.password_lbl = QLabel('Password')
         self.password_lbl.setStyleSheet(LABEL_STYLE)
-        self.password = QTextEdit()
+        self.password = QLineEdit()
+        self.password.setEchoMode(QLineEdit.Password)
         self.password.setFixedHeight(30)
         self.password.setStyleSheet(TEXTEDIT_STYLE)
+        self.password.setToolTip('Please Choose a strong password')
         self.confirm_password_lbl = QLabel('Confirm Password')
         self.confirm_password_lbl.setStyleSheet(LABEL_STYLE)
-        self.confirm_password = QTextEdit()
+        self.confirm_password = QLineEdit()
+        self.confirm_password.setEchoMode(QLineEdit.Password)
         self.confirm_password.setFixedHeight(30)
         self.confirm_password.setStyleSheet(TEXTEDIT_STYLE)
+        self.confirm_password.setToolTip('Please rewrite the password')
 
         self.win_lo.addWidget(self.username_lbl)
         self.win_lo.addWidget(self.username)
@@ -316,8 +361,39 @@ class SignUp(QMainWindow):
         self.signup_btn = QPushButton('SIGN UP')
         self.signup_btn.setStyleSheet(LONG_BTN_STYLE)
         self.signup_btn.setFixedSize(200, 50)
+        self.signup_btn.clicked.connect(self.click_signup)
         self.win_lo.addWidget(self.signup_btn, alignment=Qt.AlignCenter)
 
+    def click_signup(self):
+        username = self.username.toPlainText()
+        email = self.email.toPlainText()
+        password = self.password.text()
+        confirm_password = self.confirm_password.text()
+
+        global win2
+        if not exists(f'C:\\Users\\{username}'):
+            self.username_lbl.setText('Username does not exist')
+        elif not validate_email(email):
+            invalidemail = InvalidEmail()
+            invalidemail.show()
+            win2 = invalidemail
+        elif password != confirm_password:
+            self.confirm_password_lbl.setText('Passwords did not match')
+        else:
+            self.username_lbl.setText('Username')
+            self.confirm_password_lbl.setText('Confirm Password')
+            user = User(username, password, email, True, True)
+            user.store()
+            self.close()
+            if not exists(f'C:\\Users\\{username}\\AppData\\Local\\Google\\Chrome\\User Data\\Default\\History'):
+                nodb = NoDB()
+                nodb.show()
+                win2 = nodb
+            else:
+                main = Window()
+                main.showMaximized()
+                win2 = main
+            
 
 class SignIn(QMainWindow):
     def __init__(self) -> None:
@@ -362,25 +438,84 @@ class SignIn(QMainWindow):
         self.username.setStyleSheet(TEXTEDIT_STYLE)
         self.password_lbl = QLabel('Password')
         self.password_lbl.setStyleSheet(LABEL_STYLE)
-        self.password = QTextEdit()
+        self.password = QLineEdit()
+        self.password.setEchoMode(QLineEdit.Password)
         self.password.setFixedHeight(30)
         self.password.setStyleSheet(TEXTEDIT_STYLE)
+        self.forgot = QPushButton('forgot password ?')
+        self.forgot.setStyleSheet(FORGOT_STYLE)
+        self.forgot.setFixedWidth(100)
+        self.forgot.clicked.connect(self.click_forgot)
         
         self.win_lo.addWidget(self.username_lbl)
         self.win_lo.addWidget(self.username)
         self.win_lo.addWidget(self.password_lbl)
         self.win_lo.addWidget(self.password)
+        self.win_lo.addWidget(self.forgot)
+
+    def click_forgot(self):
+        port = 465
+        smtp_server = "smtp.gmail.com"
+        sender_email = "chitrangofbhoirs@gmail.com"
+        receiver_email = ""
+        message = 'Subject: Password\n\n'
+        with open('user.txt', 'r') as user:
+            user.readline()
+            receiver_email = user.readline()
+            message += user.readline()
+        password = '#Chichi@BOM'
+        context = ssl.create_default_context()
+        with smtplib.SMTP_SSL(smtp_server, port) as server:
+            server.ehlo()
+            server.ehlo()
+            server.login(sender_email, password)
+            server.sendmail(sender_email, receiver_email, message)
+            self.forgot.setText('Check the mail')
+            QTest.qWait(5000)
+            self.forgot.setText('Forgot Password ?')
 
     def create_signin(self):
         self.signin_btn = QPushButton('SIGN IN')
         self.signin_btn.setStyleSheet(LONG_BTN_STYLE)
         self.signin_btn.setFixedSize(200, 50)
+        self.signin_btn.clicked.connect(self.click_signin)
         shadow = QGraphicsDropShadowEffect()
         shadow.setColor(QColor('#111'))
         shadow.setOffset(2)
         shadow.setBlurRadius(10)
         self.signin_btn.setGraphicsEffect(shadow)
         self.win_lo.addWidget(self.signin_btn, alignment=Qt.AlignCenter)
+
+    def click_signin(self):
+        username = self.username.toPlainText()
+        password = self.password.text()
+
+        global win2
+        with open('user.txt') as user:
+            user_username = user.readline().strip()
+            user.readline()
+            user_password = user.readline().strip()
+            if user_username == username and str(password) == user_password:
+                self.username_lbl.setText('Username')
+                self.password_lbl.setText('Password')
+                self.close()
+                if not exists(f'C:\\Users\\{username}\\AppData\\Local\\Google\\Chrome\\User Data\\Default\\History'):
+                    nodb = NoDB()
+                    nodb.show()
+                    win2 = nodb
+                else:
+                    main = Window()
+                    main.showMaximized()
+                    win2 = main
+            elif user_username != username and str(password) == user_password:
+                self.username_lbl.setText('Invalid Username')
+                self.password_lbl.setText('Password')
+            elif user_username == username and str(password) != user_password:
+                self.username_lbl.setText('Username')
+                self.password_lbl.setText('Invalid Password')
+            else:
+                self.username_lbl.setText('Invalid Username')
+                self.password_lbl.setText('Invalid Password')
 
 
 class NoDB(QMainWindow):
@@ -443,6 +578,7 @@ class NoDB(QMainWindow):
         self.path_btn.setStyleSheet(SMALL_BTN_STYLE)
         self.path_btn.setIcon(QIcon(PATH_ICON))
         self.path_btn.setIconSize(QSize(18, 16))
+        self.path_btn.clicked.connect(self.click_path_btn)
         shadow = QGraphicsDropShadowEffect()
         shadow.setColor(QColor('#111'))
         shadow.setOffset(2)
@@ -454,16 +590,31 @@ class NoDB(QMainWindow):
 
         self.win_lo.addWidget(self.inputbox)
 
+    def click_path_btn(self):
+        file, _ = QFileDialog.getOpenFileName(self)
+        self.path_txt.setText(file)
+
     def create_ok(self):
         self.ok_btn = QPushButton('OK')
         self.ok_btn.setStyleSheet(LONG_BTN_STYLE)
         self.ok_btn.setFixedSize(200, 50)
+        self.ok_btn.clicked.connect(self.click_ok)
         shadow = QGraphicsDropShadowEffect()
         shadow.setColor(QColor('#111'))
         shadow.setOffset(2)
         shadow.setBlurRadius(10)
         self.ok_btn.setGraphicsEffect(shadow)
         self.win_lo.addWidget(self.ok_btn, alignment=Qt.AlignCenter)
+
+    def click_ok(self):
+        file = self.path_txt.toPlainText()
+        print(file)
+        Database.set_path(file)
+        self.close
+        global win2
+        main = Window()
+        main.showMaximized()
+        win2 = main
 
     
 class NoChrome(QMainWindow):
@@ -516,12 +667,16 @@ class NoChrome(QMainWindow):
         self.ok_btn = QPushButton('OK')
         self.ok_btn.setStyleSheet(LONG_BTN_STYLE)
         self.ok_btn.setFixedSize(200, 50)
+        self.ok_btn.clicked.connect(self.click_ok)
         shadow = QGraphicsDropShadowEffect()
         shadow.setColor(QColor('#111'))
         shadow.setOffset(2)
         shadow.setBlurRadius(10)
         self.ok_btn.setGraphicsEffect(shadow)
         self.win_lo.addWidget(self.ok_btn, alignment=Qt.AlignCenter)
+
+    def click_ok(self):
+        self.close()
 
 
 class InvalidEmail(QMainWindow):
@@ -574,9 +729,13 @@ class InvalidEmail(QMainWindow):
         self.ok_btn = QPushButton('OK')
         self.ok_btn.setStyleSheet(LONG_BTN_STYLE)
         self.ok_btn.setFixedSize(200, 50)
+        self.ok_btn.clicked.connect(self.click_ok)
         shadow = QGraphicsDropShadowEffect()
         shadow.setColor(QColor('#111'))
         shadow.setOffset(2)
         shadow.setBlurRadius(10)
         self.ok_btn.setGraphicsEffect(shadow)
         self.win_lo.addWidget(self.ok_btn, alignment=Qt.AlignCenter)
+
+    def click_ok(self):
+        self.close()

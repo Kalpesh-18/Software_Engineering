@@ -1,3 +1,6 @@
+import email
+
+
 class User(object):
     def __init__(self, 
                  id:str, 
@@ -43,3 +46,7 @@ class User(object):
 
     def set_is_new(self, is_new:bool) -> None:
         self._is_new = is_new
+
+    def store(self):
+        with open('user.txt', 'w') as user:
+            user.write(f'{self._id}\n{self._email}\n{self._pwd}')
