@@ -456,14 +456,14 @@ class SignIn(QMainWindow):
     def click_forgot(self):
         port = 465
         smtp_server = "smtp.gmail.com"
-        sender_email = "chitrangofbhoirs@gmail.com"
+        sender_email = "youremail"
         receiver_email = ""
         message = 'Subject: Password\n\n'
         with open('user.txt', 'r') as user:
             user.readline()
             receiver_email = user.readline()
             message += user.readline()
-        password = '#Chichi@BOM'
+        password = 'yourpwd'
         context = ssl.create_default_context()
         with smtplib.SMTP_SSL(smtp_server, port) as server:
             server.ehlo()
